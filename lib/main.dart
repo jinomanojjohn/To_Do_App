@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_to_do_app/task_modal.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,7 +30,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<TaskItemModel> tasks = [
+    TaskItemModel("Hello ", "", DateTime.now(), false)
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,23 +54,19 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(
-                        height: 40,
+                        height: 20,
                       ),
                       const Text(
                         "Task Manager",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                        ),
+                        style: TextStyle(color: Colors.white),
                       ),
                       const SizedBox(
-                        height: 50,
+                        height: 60,
                       ),
                       const Text("December 19",
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 30,
+                              fontSize: 22,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 20),
                       Padding(
@@ -69,22 +75,25 @@ class HomePage extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color.fromARGB(255, 56, 39, 39),
                               borderRadius: BorderRadius.circular(15)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                            ],
+                            children: tasks
+                                .map((e) => TaskItem(
+                                      task: e,
+                                      onChange: (bool value) {
+                                        setState(() {
+                                          tasks
+                                              .firstWhere(
+                                                  (elm) => elm.title == e.title)
+                                              .isCompleted = value;
+                                        });
+                                      },
+                                    ))
+                                .toList()
+                                .where((element) => !element.task.isCompleted)
+                                .toList(),
                           ),
                         ),
                       ),
@@ -106,11 +115,21 @@ class HomePage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(15),
                               color: Colors.white),
                           child: Column(
-                            children: const [
-                              TaskItem(),
-                              TaskItem(),
-                              TaskItem(),
-                            ],
+                            children: tasks
+                                .map((e) => TaskItem(
+                                      task: e,
+                                      onChange: (bool value) {
+                                        setState(() {
+                                          tasks
+                                              .firstWhere(
+                                                  (elm) => elm.title == e.title)
+                                              .isCompleted = value;
+                                        });
+                                      },
+                                    ))
+                                .toList()
+                                .where((element) => element.task.isCompleted)
+                                .toList(),
                           ),
                         ),
                       ),
@@ -121,11 +140,16 @@ class HomePage extends StatelessWidget {
                           width: double.infinity,
                           height: 40,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              setState(() {
+                                tasks.add(TaskItemModel(
+                                    "new task", "", DateTime.now(), false));
+                              });
+                            },
+                            child: const Text("Add Task"),
                             style: TextButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white),
-                            child: const Text("Add Task"),
                           ),
                         ),
                       )
@@ -139,33 +163,50 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class TaskItem extends StatelessWidget {
+class TaskItem extends StatefulWidget {
+  final TaskItemModel task;
+
+  final void Function(bool value) onChange;
+
   const TaskItem({
     Key? key,
+    required this.task,
+    required this.onChange,
   }) : super(key: key);
+
+  @override
+  State<TaskItem> createState() => _TaskItemState();
+}
+
+class _TaskItemState extends State<TaskItem> {
+  bool isChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isChecked = widget.task.isCompleted;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 5, bottom: 5),
       child: Row(
-        children: const [
-          CircleAvatar(
+        children: [
+          const CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.blue,
+            backgroundColor: Colors.green,
             child: Icon(Icons.place),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Text(
-            "Task 1",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          Spacer(),
-          Checkbox(value: false, onChanged: null)
+              "${widget.task.title}  ${widget.task.timestamp.hour}:${widget.task.timestamp.minute}"),
+          const Spacer(),
+          Checkbox(
+              value: widget.task.isCompleted,
+              onChanged: (bool? value) {
+                widget.onChange(value ?? false);
+              })
         ],
       ),
     );
